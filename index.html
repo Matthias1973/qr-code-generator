@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR-Code Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body {
+      background-color: #2d2d3c;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 2em;
+    }
+
+    .qr-code {
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QR-Code Generator</h1>
+    <p>Gib deinen Link ein, um einen QR-Code zu erstellen.</p>
+    
+    <input id="linkInput" type="text" placeholder="Hier Link eingeben" style="width: 80%; padding: 10px;">
+    <button onclick="generateQRCode()" style="padding: 10px 20px; margin: 10px;">QR-Code erstellen</button>
+    
+    <div id="qrcode" class="qr-code"></div>
+    <button id="downloadBtn" style="display: none; padding: 10px;">QR-Code herunterladen</button>
+  </div>
+
+  <script>
+    async function generateQRCode() {
+      const link = document.getElementById('linkInput').value;
+      const qrCodeContainer = document.getElementById('qrcode');
+      qrCodeContainer.innerHTML = ''; // QR-Code Container leeren
+      
+      if (!link) {
+        alert('Bitte einen gültigen Link eingeben.');
+        return;
+      }
+
+      try {
+        // API-Aufruf zum Backend
+        const response = await fetch('<DEIN_BACKEND_URL>/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: link })
+        });
+
+        if (!response.ok) {
+          throw new Error('Fehler beim Generieren des QR-Codes.');
+        }
+
+        const data = await response.json();
+        const qrCodeImage = new Image();
+        qrCodeImage.src = data.qrCode;
+        qrCodeImage.alt = 'QR-Code';
+        qrCodeContainer.appendChild(qrCodeImage);
+
+        // Download-Button erzeugen
+        const downloadBtn = document.getElementById('downloadBtn');
+        downloadBtn.style.display = 'inline-block';
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.download = 'qrcode.png';
+          link.href = data.qrCode;
+          link.click();
+        };
+      } catch (error) {
+        console.error(error);
+        alert('Es gab ein Problem mit der QR-Code Generierung.');
+      }
+    }
+  </script>
+</body>
+</html>
